@@ -10,11 +10,17 @@ import { MoveAnalyzer, RandomMoveAnalyzer } from './moveAnalyzers'
  * @returns The best move string, or null if not found.
  */
 function parseBestMoveFromHint(hintOutput: string): string | null {
-  // Typical line: ' 1. Cubeful 0-ply    8/4 6/4 ...'
+  // Try the original format first
   const lines = hintOutput.split('\n')
   for (const line of lines) {
-    // Improved regex: match one or more moves in the form of number/number (e.g., 8/5 6/5)
     const match = line.match(/^\s*1\.\s+[^\s]+\s+[^\s]+\s+((?:\d+\/\d+\s*)+)/)
+    if (match) {
+      return match[1].trim()
+    }
+  }
+  // Fallback: look for "gnubg moves ..." line
+  for (const line of lines) {
+    const match = line.match(/gnubg moves ([\d/ ]+)\./i)
     if (match) {
       return match[1].trim()
     }
