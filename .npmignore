@@ -1,0 +1,9 @@
+src/**/__tests__/
+src/**/*.test.ts
+src/**/*.test.js
+src/scripts/
+*.config.js
+*.config.json
+!.gitignore
+!.npmignore
+README.md 
