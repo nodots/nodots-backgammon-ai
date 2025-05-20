@@ -1,6 +1,6 @@
 {
   "name": "nodots-backgammon-ai",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI and integration for nodots-backgammon using gnubg as a backend engine.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
