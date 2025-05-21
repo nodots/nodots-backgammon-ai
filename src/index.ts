@@ -10,17 +10,18 @@ import { MoveAnalyzer, RandomMoveAnalyzer } from './moveAnalyzers'
  * @returns The best move string, or null if not found.
  */
 function parseBestMoveFromHint(hintOutput: string): string | null {
-  // Try the original format first
   const lines = hintOutput.split('\n')
   for (const line of lines) {
-    const match = line.match(/^\s*1\.\s+[^\s]+\s+[^\s]+\s+((?:\d+\/\d+\s*)+)/)
+    const match = line.match(
+      /^\s*1\.\s+[^\s]+\s+[^\s]+\s+((?:[a-zA-Z0-9*]+\/[a-zA-Z0-9*]+(?:\*|)?\s*)+)/
+    )
     if (match) {
       return match[1].trim()
     }
   }
   // Fallback: look for "gnubg moves ..." line
   for (const line of lines) {
-    const match = line.match(/gnubg moves ([\d/ ]+)\./i)
+    const match = line.match(/gnubg moves ([\w/* ]+)\./i)
     if (match) {
       return match[1].trim()
     }

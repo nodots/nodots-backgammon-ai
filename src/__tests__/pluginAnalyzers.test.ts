@@ -1,3 +1,15 @@
+// Mock axios before any imports
+jest.mock('axios', () => ({
+  post: jest.fn().mockResolvedValue({
+    data: { output: 'mocked gnubg output' },
+  }),
+}))
+
+// Mock getBestMoveFromGnubg to always resolve
+jest.mock('../gnubgApi', () => ({
+  getBestMoveFromGnubg: jest.fn().mockResolvedValue('mocked gnubg output'),
+}))
+
 import path from 'path'
 import { loadAnalyzersFromPluginsDir } from '../pluginLoader'
 
@@ -59,6 +71,13 @@ describe('Plugin Analyzers', () => {
     const move = await analyzers['examplePluginAnalyzer'].selectMove(
       moves as any
     )
+    expect(move).toBe(moves[0])
+  })
+
+  it('gnubgMoveAnalyzer returns the first move (stub, logs GNUBG output)', async () => {
+    const move = await analyzers['gnubgMoveAnalyzer'].selectMove(moves as any, {
+      positionId: 'dummy-xgid-string',
+    })
     expect(move).toBe(moves[0])
   })
 })

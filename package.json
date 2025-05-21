@@ -32,6 +32,7 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.18",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
@@ -43,6 +44,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "nodots-backgammon-core": "file:../nodots-backgammon-core"
   }
 }
