@@ -29,7 +29,8 @@
     "build": "tsc",
     "clean": "rm -rf dist coverage",
     "prebuild": "npm run clean",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "publish:npm": "npm publish --access public"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
