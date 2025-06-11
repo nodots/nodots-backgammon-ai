@@ -1,5 +1,14 @@
 # Nodots Backgammon AI
 
+<!-- COVERAGE-START -->
+
+![Statements](https://img.shields.io/badge/Statements-0%25-red?style=flat-square)
+![Branches](https://img.shields.io/badge/Branches-0%25-red?style=flat-square)
+![Functions](https://img.shields.io/badge/Functions-0%25-red?style=flat-square)
+![Lines](https://img.shields.io/badge/Lines-0%25-red?style=flat-square)
+
+<!-- COVERAGE-END -->
+
 A TypeScript library that provides AI capabilities for backgammon games using GNU Backgammon (gnubg) as the backend engine. This package is part of the Nodots Backgammon ecosystem.
 
 ## Features
