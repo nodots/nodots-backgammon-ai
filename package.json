@@ -1,11 +1,12 @@
 {
   "name": "@nodots-llc/backgammon-ai",
   "version": "2.2.1",
-  "description": "AI and integration for nodots-backgammon using gnubg as a backend engine.",
+  "description": "AI and integration for nodots-backgammon using gnubg as a backend engine with embedded source code.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "gnubg"
   ],
   "keywords": [
     "backgammon",
@@ -31,11 +32,16 @@
     "clean": "rm -rf dist coverage",
     "prebuild": "npm run clean",
     "prepare": "npm run build",
-    "publish:npm": "npm publish --access public"
+    "publish:npm": "npm publish --access public",
+    "setup-gnubg": "node scripts/setup-gnubg.js",
+    "gnubg:configure": "cd gnubg && ./configure",
+    "gnubg:build": "cd gnubg && make",
+    "gnubg:install": "cd gnubg && sudo make install",
+    "gnubg:clean": "cd gnubg && make clean"
   },
   "dependencies": {
     "axios": "^1.9.0",
-    "@nodots-llc/backgammon-core": "^2.2.1"
+    "@nodots-llc/backgammon-core": "^3.1.1"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",

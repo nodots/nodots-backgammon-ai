@@ -1,6 +1,7 @@
 // Entry point for nodots-backgammon-ai
 import { exec } from 'child_process'
 import { BackgammonMoveBase } from '../../nodots-backgammon-types/src/move'
+import { gnubg, GnubgIntegration } from './gnubg'
 import { MoveAnalyzer, RandomMoveAnalyzer } from './moveAnalyzers'
 
 /**
@@ -31,12 +32,42 @@ function parseBestMoveFromHint(hintOutput: string): string | null {
 
 /**
  * Calls GNU Backgammon to get the best move for a given position ID.
+ * Uses the new GnubgIntegration class which automatically detects local builds.
  *
  * @param positionId The GNU Backgammon Position ID.
  * @returns A promise that resolves with the best move string (e.g., '8/4 6/4').
  * @throws Error if gnubg execution fails or if the best move cannot be parsed.
  */
 export async function getGnubgMoveHint(positionId: string): Promise<string> {
+  try {
+    // Use the new gnubg integration
+    const bestMove = await gnubg.getBestMove(positionId)
+    console.log('Best move from gnubg:', bestMove)
+    return bestMove
+  } catch (error) {
+    // Check if gnubg is available and provide helpful error message
+    const isAvailable = await gnubg.isAvailable()
+    if (!isAvailable) {
+      const instructions = gnubg.getBuildInstructions()
+      throw new Error(`GNU Backgammon is not available.\n\n${instructions}`)
+    }
+
+    // Re-throw original error if gnubg is available but command failed
+    throw error
+  }
+}
+
+/**
+ * Legacy function - calls GNU Backgammon using direct command execution.
+ * This is kept for backwards compatibility but the new getGnubgMoveHint is preferred.
+ *
+ * @param positionId The GNU Backgammon Position ID.
+ * @returns A promise that resolves with the best move string (e.g., '8/4 6/4').
+ * @throws Error if gnubg execution fails or if the best move cannot be parsed.
+ */
+export async function getGnubgMoveHintLegacy(
+  positionId: string
+): Promise<string> {
   const commands = `new game\nset board ${positionId}\nhint`
 
   return new Promise((resolve, reject) => {
@@ -89,6 +120,43 @@ export async function selectMoveFromList(
   const moveAnalyzer = analyzer || new RandomMoveAnalyzer()
   return moveAnalyzer.selectMove(moves)
 }
+
+/**
+ * Get information about the available gnubg installation
+ * @returns Object with gnubg availability and version info
+ */
+export async function getGnubgInfo(): Promise<{
+  available: boolean
+  path: string | null
+  version?: string
+  hasLocalBuild: boolean
+}> {
+  const available = await gnubg.isAvailable()
+  const path = await gnubg.getGnubgPath()
+  const hasLocalBuild = await gnubg.hasLocalBuild()
+
+  let version: string | undefined
+  if (available) {
+    try {
+      version = await gnubg.getVersion()
+    } catch {
+      version = 'Unknown'
+    }
+  }
+
+  return {
+    available,
+    path,
+    version,
+    hasLocalBuild,
+  }
+}
+
+// Re-export for convenience
+export * from './gnubgApi'
+export * from './moveAnalyzers'
+export * from './pluginLoader'
+export { gnubg, GnubgIntegration }
 
 // Example usage (assuming you have a Position ID from nodots-backgammon-core):
 // async function main() {

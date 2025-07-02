@@ -1,9 +1,75 @@
-node_modules/
-npm-debug.log
-.DS_Store
-.env
-dist/
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
 coverage/
-.idea/
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node_modules
+node_modules/
+
+# Compiled output
+dist/
+
+# IDE
 .vscode/
-*.log 
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# gnubg build artifacts
+gnubg/config.h
+gnubg/config.log
+gnubg/config.status
+gnubg/Makefile
+gnubg/libtool
+gnubg/stamp-h1
+gnubg/*.o
+gnubg/*.lo
+gnubg/*.la
+gnubg/.deps/
+gnubg/.libs/
+gnubg/autom4te.cache/
+gnubg/gnubg
+gnubg/makebearoff
+gnubg/makehyper
+gnubg/bearoffdump
+gnubg/board3d/*.o
+gnubg/board3d/*.lo
+gnubg/board3d/*.la
+gnubg/board3d/.deps/
+gnubg/board3d/.libs/
+gnubg/board3d/Makefile
+gnubg/lib/*.o
+gnubg/lib/*.lo
+gnubg/lib/*.la
+gnubg/lib/.deps/
+gnubg/lib/.libs/
+gnubg/lib/Makefile
+gnubg/po/*.gmo
+gnubg/po/Makefile
+gnubg/po/Makefile.in
+gnubg/po/POTFILES
+gnubg/po/stamp-po
+gnubg/doc/Makefile 
