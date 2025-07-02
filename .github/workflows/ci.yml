@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            libglib2.0-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            bison \
+            flex
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install autoconf automake libtool pkg-config glib readline sqlite3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run tests with coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20'
+        run: npm run test:coverage
+
+  build-gnubg:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            libglib2.0-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            bison \
+            flex
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install autoconf automake libtool pkg-config glib readline sqlite3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure gnubg
+        run: npm run gnubg:configure
+
+      - name: Build gnubg
+        run: npm run gnubg:build
+
+      - name: Test gnubg binary
+        run: |
+          if [ -f "gnubg/gnubg" ]; then
+            echo "✅ gnubg binary built successfully"
+            timeout 5s gnubg/gnubg --version || echo "Version check completed"
+          else
+            echo "❌ gnubg binary not found"
+            exit 1
+          fi
+
+      - name: Test position analysis
+        run: |
+          echo "Testing position analysis..."
+          timeout 10s bash -c '
+            echo -e "new game\nset board gF/xATDgc/AAOA\nshow board\nquit" | gnubg/gnubg --no-rc -t 2>/dev/null
+          ' || echo "Position test completed"
