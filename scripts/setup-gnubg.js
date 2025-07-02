@@ -67,7 +67,7 @@ function getDependencyInstructions() {
         name: 'macOS',
         packageManager: 'Homebrew',
         installCommand:
-          'brew install autoconf automake libtool pkg-config glib gtk+ readline sqlite',
+          'brew install autoconf automake libtool pkg-config glib readline sqlite',
         setupInstructions: [
           'Install Homebrew if not already installed:',
           '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
@@ -83,7 +83,7 @@ function getDependencyInstructions() {
             name: 'Ubuntu/Debian',
             packageManager: 'apt',
             installCommand:
-              'sudo apt-get update && sudo apt-get install build-essential autoconf automake libtool pkg-config libglib2.0-dev libgtk2.0-dev libreadline-dev libsqlite3-dev',
+              'sudo apt-get update && sudo apt-get install build-essential autoconf automake libtool pkg-config libglib2.0-dev libreadline-dev libsqlite3-dev',
             setupInstructions: [],
           }
         } else if (
@@ -95,7 +95,7 @@ function getDependencyInstructions() {
             name: 'Red Hat/CentOS/Fedora',
             packageManager: 'yum/dnf',
             installCommand:
-              'sudo yum install -y autoconf automake libtool pkgconfig glib2-devel gtk2-devel readline-devel sqlite-devel gcc make',
+              'sudo yum install -y autoconf automake libtool pkgconfig glib2-devel readline-devel sqlite-devel gcc make',
             setupInstructions: [],
           }
         }
@@ -107,7 +107,7 @@ function getDependencyInstructions() {
         name: 'Linux',
         packageManager: 'package manager',
         installCommand:
-          'Install: build-essential autoconf automake libtool pkg-config libglib2.0-dev libgtk2.0-dev',
+          'Install: build-essential autoconf automake libtool pkg-config libglib2.0-dev libreadline-dev',
         setupInstructions: [
           "Use your distribution's package manager to install the dependencies above",
         ],
@@ -178,8 +178,14 @@ async function configureGnubg() {
       fs.chmodSync(autogenPath, '755')
     }
 
-    // Run configure
-    const configureArgs = ['--enable-simd=yes', '--with-gtk', '--with-python']
+    // Minimal configuration - only what's needed for command-line operation
+    const configureArgs = [
+      '--enable-simd=yes',
+      '--disable-gtk', // Disable GTK GUI
+      '--disable-cputest', // Disable CPU testing
+      '--without-board3d', // Disable 3D board
+      '--without-python', // Disable Python (optional, can enable if needed)
+    ]
 
     const configureCommand = `./configure ${configureArgs.join(' ')}`
     info(`Running: ${configureCommand}`)
@@ -187,8 +193,8 @@ async function configureGnubg() {
     execSync(configureCommand, { stdio: 'inherit' })
     success('gnubg configured successfully')
     return true
-  } catch (error) {
-    error(`Failed to configure gnubg: ${error.message}`)
+  } catch (err) {
+    error(`Failed to configure gnubg: ${err.message}`)
     return false
   } finally {
     process.chdir('..')
@@ -201,8 +207,8 @@ async function configureGnubg() {
 async function buildGnubg() {
   const gnubgDir = path.join(process.cwd(), 'gnubg')
 
-  if (!fs.existsSync(path.join(gnubgDir, 'Makefile'))) {
-    error('gnubg not configured. Run configure first.')
+  if (!fs.existsSync(gnubgDir)) {
+    error('gnubg directory not found')
     return false
   }
 
@@ -211,22 +217,14 @@ async function buildGnubg() {
   try {
     process.chdir(gnubgDir)
 
-    const makeCommand = 'make'
-    info(`Running: ${makeCommand}`)
+    const buildCommand = 'make'
+    info(`Running: ${buildCommand}`)
 
-    execSync(makeCommand, { stdio: 'inherit' })
+    execSync(buildCommand, { stdio: 'inherit' })
     success('gnubg built successfully')
-
-    // Check if binary was created
-    if (fs.existsSync(path.join(gnubgDir, 'gnubg'))) {
-      success('gnubg binary created successfully')
-      return true
-    } else {
-      warning('gnubg binary not found after build')
-      return false
-    }
-  } catch (error) {
-    error(`Failed to build gnubg: ${error.message}`)
+    return true
+  } catch (err) {
+    error(`Failed to build gnubg: ${err.message}`)
     return false
   } finally {
     process.chdir('..')

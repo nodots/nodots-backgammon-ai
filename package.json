@@ -34,7 +34,7 @@
     "prepare": "npm run build",
     "publish:npm": "npm publish --access public",
     "setup-gnubg": "node scripts/setup-gnubg.js",
-    "gnubg:configure": "cd gnubg && ./configure",
+    "gnubg:configure": "cd gnubg && ./configure --enable-simd=yes --disable-gtk --disable-cputest --without-board3d --without-python",
     "gnubg:build": "cd gnubg && make",
     "gnubg:install": "cd gnubg && sudo make install",
     "gnubg:clean": "cd gnubg && make clean"

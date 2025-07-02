@@ -4400,10 +4400,9 @@ setup_readline(void)
     int i;
     gnubg_histfile = g_build_filename(szHomeDirectory, "history", NULL);
     rl_readline_name = "gnubg";
-    rl_basic_word_break_characters = rl_filename_quote_characters = szCommandSeparators;
+    rl_basic_word_break_characters = szCommandSeparators;
     rl_completer_quote_characters = "\"";
     /* assume readline 4.2 or later */
-    rl_completion_entry_function = NullGenerator;
     rl_attempted_completion_function = CompleteKeyword;
     /* setup history */
     read_history(gnubg_histfile);

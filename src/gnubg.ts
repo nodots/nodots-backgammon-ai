@@ -176,9 +176,9 @@ export class GnubgIntegration {
 GNU Backgammon (gnubg) is not available. To build it locally:
 
 1. Install dependencies (macOS with Homebrew):
-   brew install autoconf automake libtool pkg-config glib gtk+
+   brew install autoconf automake libtool pkg-config glib readline sqlite
 
-2. Configure and build:
+2. Configure and build (minimal configuration for AI use):
    npm run gnubg:configure
    npm run gnubg:build
 
