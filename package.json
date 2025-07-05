@@ -2,8 +2,8 @@
   "name": "@nodots-llc/backgammon-ai",
   "version": "2.2.1",
   "description": "AI and integration for nodots-backgammon using gnubg as a backend engine.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/nodots-backgammon-ai/src/index.js",
+  "types": "dist/nodots-backgammon-ai/src/index.d.ts",
   "files": [
     "dist"
   ],

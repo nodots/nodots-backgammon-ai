@@ -1,7 +1,162 @@
 // Entry point for nodots-backgammon-ai
 import { exec } from 'child_process'
+import { join } from 'path'
 import { BackgammonMoveBase } from '../../nodots-backgammon-types/src/move'
-import { MoveAnalyzer, RandomMoveAnalyzer } from './moveAnalyzers'
+import {
+  FurthestFromOffMoveAnalyzer,
+  MoveAnalyzer,
+  RandomMoveAnalyzer,
+  StrategicMoveAnalyzer,
+} from './moveAnalyzers'
+
+/**
+ * Gets the path to the local gnubg executable
+ */
+function getGnubgPath(): string {
+  // Path to the local gnubg executable relative to this file
+  const gnubgPath = join(__dirname, '..', 'gnubg', 'gnubg')
+  return gnubgPath
+}
+
+/**
+ * AI difficulty levels for robot players
+ */
+export enum AIDifficulty {
+  BEGINNER = 'beginner',
+  INTERMEDIATE = 'intermediate',
+  ADVANCED = 'advanced',
+}
+
+/**
+ * Game state interface for AI decision making
+ */
+export interface GameState {
+  positionId?: string
+  board?: any
+  currentPlayer?: string
+  availableMoves?: BackgammonMoveBase[]
+  gamePhase?: 'opening' | 'middle' | 'race' | 'bearoff'
+}
+
+/**
+ * Main BackgammonAI class for robot automation
+ */
+export class BackgammonAI {
+  private difficulty: AIDifficulty
+  private moveAnalyzer: MoveAnalyzer
+
+  constructor(difficulty: AIDifficulty = AIDifficulty.INTERMEDIATE) {
+    this.difficulty = difficulty
+    this.moveAnalyzer = this.createMoveAnalyzer(difficulty)
+  }
+
+  /**
+   * Creates appropriate move analyzer based on difficulty
+   */
+  private createMoveAnalyzer(difficulty: AIDifficulty): MoveAnalyzer {
+    switch (difficulty) {
+      case AIDifficulty.BEGINNER:
+        return new RandomMoveAnalyzer()
+      case AIDifficulty.INTERMEDIATE:
+        return new FurthestFromOffMoveAnalyzer()
+      case AIDifficulty.ADVANCED:
+        return new StrategicMoveAnalyzer()
+      default:
+        return new RandomMoveAnalyzer()
+    }
+  }
+
+  /**
+   * Get the best move for the current game state
+   * @param gameState Current game state
+   * @returns Promise resolving to the best move or null if no moves available
+   */
+  async getBestMove(gameState: GameState): Promise<BackgammonMoveBase | null> {
+    if (!gameState.availableMoves || gameState.availableMoves.length === 0) {
+      return null
+    }
+
+    const context = {
+      board: gameState.board,
+      positionId: gameState.positionId,
+      gamePhase: gameState.gamePhase,
+      currentPlayer: gameState.currentPlayer,
+    }
+
+    return this.moveAnalyzer.selectMove(gameState.availableMoves, context)
+  }
+
+  /**
+   * Set AI difficulty level
+   */
+  setDifficulty(difficulty: AIDifficulty): void {
+    this.difficulty = difficulty
+    this.moveAnalyzer = this.createMoveAnalyzer(difficulty)
+  }
+
+  /**
+   * Get current AI difficulty
+   */
+  getDifficulty(): AIDifficulty {
+    return this.difficulty
+  }
+
+  /**
+   * Check if AI should make a move automatically
+   * @param gameState Current game state
+   * @returns true if AI should make a move
+   */
+  shouldMakeMove(gameState: GameState): boolean {
+    // Basic logic: if it's the AI player's turn and there are available moves
+    return !!(gameState.availableMoves && gameState.availableMoves.length > 0)
+  }
+}
+
+/**
+ * Robot AI Service for game automation
+ */
+export class RobotAIService {
+  private aiInstances: Map<string, BackgammonAI> = new Map()
+
+  /**
+   * Create or get AI instance for a robot player
+   */
+  getAI(
+    robotId: string,
+    difficulty: AIDifficulty = AIDifficulty.INTERMEDIATE
+  ): BackgammonAI {
+    if (!this.aiInstances.has(robotId)) {
+      this.aiInstances.set(robotId, new BackgammonAI(difficulty))
+    }
+    return this.aiInstances.get(robotId)!
+  }
+
+  /**
+   * Make a move for a robot player
+   */
+  async makeRobotMove(
+    robotId: string,
+    gameState: GameState
+  ): Promise<BackgammonMoveBase | null> {
+    const ai = this.getAI(robotId)
+    return ai.getBestMove(gameState)
+  }
+
+  /**
+   * Set difficulty for a specific robot
+   */
+  setRobotDifficulty(robotId: string, difficulty: AIDifficulty): void {
+    const ai = this.getAI(robotId)
+    ai.setDifficulty(difficulty)
+  }
+
+  /**
+   * Remove AI instance for a robot (cleanup)
+   */
+  removeRobot(robotId: string): void {
+    this.aiInstances.delete(robotId)
+  }
+}
 
 /**
  * Parses the output from gnubg 'hint' command to extract the best move string.
@@ -31,6 +186,8 @@ function parseBestMoveFromHint(hintOutput: string): string | null {
 
 /**
  * Calls GNU Backgammon to get the best move for a given position ID.
+ * Note: This function may not work reliably due to gnubg setup issues.
+ * Consider using the BackgammonAI class instead for robot automation.
  *
  * @param positionId The GNU Backgammon Position ID.
  * @returns A promise that resolves with the best move string (e.g., '8/4 6/4').
@@ -38,32 +195,39 @@ function parseBestMoveFromHint(hintOutput: string): string | null {
  */
 export async function getGnubgMoveHint(positionId: string): Promise<string> {
   const commands = `new game\nset board ${positionId}\nhint`
+  const gnubgPath = getGnubgPath()
 
   return new Promise((resolve, reject) => {
-    const gnubgCommand =
-      process.platform === 'win32' ? 'gnubg-cli.exe' : 'gnubg -t'
+    // Use the local gnubg executable with text mode
+    const gnubgCommand = `"${gnubgPath}" -t`
+
     // Pipe commands to gnubg via stdin
-    exec(`echo "${commands}" | ${gnubgCommand}`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error executing gnubg: ${error.message}`)
-        console.error(`gnubg stderr: ${stderr}`)
-        reject(new Error(`Failed to execute gnubg. ${stderr || error.message}`))
-        return
+    exec(
+      `printf "${commands}\\nquit\\n" | ${gnubgCommand}`,
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing gnubg: ${error.message}`)
+          console.error(`gnubg stderr: ${stderr}`)
+          reject(
+            new Error(`Failed to execute gnubg. ${stderr || error.message}`)
+          )
+          return
+        }
+        // Log the actual gnubg output for debugging
+        console.log(
+          '\n--- GNU BG Output ---\n' +
+            stdout +
+            '\n--- End of GNU BG Output ---\n'
+        )
+        const bestMove = parseBestMoveFromHint(stdout)
+        if (!bestMove) {
+          reject(new Error('Could not parse best move from gnubg output.'))
+          return
+        }
+        console.log('Best move:', bestMove)
+        resolve(bestMove)
       }
-      // Log the actual gnubg output for debugging
-      console.log(
-        '\n--- GNU BG Output ---\n' +
-          stdout +
-          '\n--- End of GNU BG Output ---\n'
-      )
-      const bestMove = parseBestMoveFromHint(stdout)
-      if (!bestMove) {
-        reject(new Error('Could not parse best move from gnubg output.'))
-        return
-      }
-      console.log('Best move:', bestMove)
-      resolve(bestMove)
-    })
+    )
   })
 }
 
@@ -90,28 +254,14 @@ export async function selectMoveFromList(
   return moveAnalyzer.selectMove(moves)
 }
 
-// Example usage (assuming you have a Position ID from nodots-backgammon-core):
-// async function main() {
-//   // Replace with a real Position ID from your game
-//   const examplePositionId = "4HPwATDgc/ABMA"; // Standard starting position
-//   console.log(\`Requesting hint for position: \${examplePositionId}\`);
-//
-//   try {
-//     const hintOutput = await getGnubgMoveHint(examplePositionId);
-//     console.log("\\n--- GNU BG Hint Output ---");
-//     console.log(hintOutput);
-//     console.log("--- End of GNU BG Hint Output ---");
-//
-//     // TODO: Implement parsing for hintOutput to extract the top-ranked move.
-//     // The output format for the 'hint' command needs to be understood to parse it correctly.
-//     // It typically lists possible moves with their equities and other stats.
-//     // For example, you might look for the line starting with "1. Cubeful 0-ply ..."
-//     // and extract the move description (e.g., "8/4 6/4").
-//     console.log("\\nNext step: Parse the output above to find the best move.");
-//
-//   } catch (error) {
-//     console.error("Error getting GNU BG hint:", error);
-//   }
-// }
-//
-// main();
+// Export the main classes and types
+export {
+  FurthestFromOffMoveAnalyzer,
+  MoveAnalyzer,
+  RandomMoveAnalyzer,
+  StrategicMoveAnalyzer,
+} from './moveAnalyzers'
+export { loadAnalyzersFromPluginsDir } from './pluginLoader'
+
+// Default export for convenience
+export default BackgammonAI
