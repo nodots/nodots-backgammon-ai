@@ -21,8 +21,14 @@ import * as path from 'node:path'
 
 type Color = 'white' | 'black'
 
+// The suite runs under jest's ESM transform, where require.resolve is not
+// available; jest always runs from the package root, so resolve the addon's
+// bundled weights relative to cwd.
 const WEIGHTS = path.join(
-  path.dirname(require.resolve('@nodots/gnubg-hints/package.json')),
+  process.cwd(),
+  'node_modules',
+  '@nodots',
+  'gnubg-hints',
   'gnubg.wd'
 )
 
