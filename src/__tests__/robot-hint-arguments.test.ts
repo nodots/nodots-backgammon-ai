@@ -40,6 +40,8 @@ jest.unstable_mockModule('@nodots/gnubg-hints', () => ({
     initialize: initializeMock,
     configure: configureMock,
     getHintsFromPositionId: getHintsMock,
+    // The robot plan path is board-based now; same mock serves both entries.
+    getMoveHints: getHintsMock,
   },
 }))
 
@@ -123,15 +125,18 @@ beforeEach(() => {
 })
 
 describe('executeRobotTurnWithGNU hint argument wiring', () => {
-  it('passes active direction and color to getHintsFromPositionId', async () => {
+  it('passes the real board, dice, direction and color to getMoveHints', async () => {
     const game = createGame()
     await executeRobotTurnWithGNU(game as any)
 
     expect(getHintsMock).toHaveBeenCalledTimes(1)
-    const args = getHintsMock.mock.calls[0]
-    expect(args[0]).toBe('pid')
-    expect(args[1]).toEqual([3, 5])
-    expect(args[3]).toBe('counterclockwise')
-    expect(args[4]).toBe('white')
+    const [request, maxHints] = getHintsMock.mock.calls[0]
+    // Board-based path: the game's own board goes to the addon untranslated —
+    // no positionId round-trip (whose bar encoding stuck production games).
+    expect(request.board).toBe(game.board)
+    expect(request.dice).toEqual([3, 5])
+    expect(request.activePlayerDirection).toBe('counterclockwise')
+    expect(request.activePlayerColor).toBe('white')
+    expect(maxHints).toBe(5)
   })
 })
