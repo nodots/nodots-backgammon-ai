@@ -59,6 +59,8 @@ jest.unstable_mockModule('@nodots/gnubg-hints', () => ({
     initialize: initializeMock,
     configure: configureMock,
     getHintsFromPositionId: getHintsMock,
+    // The robot plan path is board-based now; same mock serves both entries.
+    getMoveHints: getHintsMock,
   },
 }))
 

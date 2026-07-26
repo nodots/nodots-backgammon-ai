@@ -307,9 +307,8 @@ export const executeRobotTurnWithGNU = async (
       logger.warn('[AI] Failed to compute gnuPositionId:', err)
       planPositionId = undefined
     }
-    if (!planPositionId) {
-      throw new Error('[AI] No position ID available - cannot get GNU hints')
-    }
+    // The board-based hint path below does not need the id; it is computed
+    // for diagnostics only, so failure to compute it is not fatal.
 
     const activePlayerDirection =
       ((currentGame.activePlayer as any)?.direction as BackgammonMoveDirection) ??
@@ -317,23 +316,34 @@ export const executeRobotTurnWithGNU = async (
     const activePlayerColor =
       ((currentGame.activePlayer as any)?.color as BackgammonColor) ?? 'white'
     // Request multiple hints so the tiebreaker below has alternatives.
-    // Routed through the AnalysisProvider boundary (InProcessGnuProvider),
-    // which delegates to GnuBgHints.getHintsFromPositionId with the same
-    // arguments. cube/match fields are inert on the positionId hint path.
-    const hintRequest: HintRequest = {
-      positionId: planPositionId,
-      dice: currentRoll,
-      activePlayerColor,
-      activePlayerDirection,
-      cubeValue: 1,
-      cubeOwner: null,
-      matchScore: [0, 0],
-      matchLength: 0,
-      crawford: false,
-      jacoby: false,
-      beavers: false,
-    }
-    const hints = await inProcessGnuProvider.getMoveHints(hintRequest, 5)
+    // BOARD-based addon path, deliberately NOT the positionId bridge: core
+    // encodes ids opponent-first while the addon's native decode reads
+    // gnubg's own on-roll-first order, so the id round-trip assigns BAR
+    // checkers to the wrong side. On any forced-reentry position gnubg then
+    // plans a normal move, the reentry guard below refuses it, and the
+    // robot's turn retries forever (production game 6a2ce41f). The real
+    // board is in hand and needs no decoding; positionId stays computed
+    // above for diagnostics only.
+    const hints = await GnuBgHints.getMoveHints(
+      {
+        // core's BackgammonBoard is the shape convertBoardToGnuBg reads;
+        // the addon declares its own structural HintBoard for it.
+        board: currentGame.board as unknown as Parameters<
+          typeof GnuBgHints.getMoveHints
+        >[0]['board'],
+        dice: currentRoll,
+        activePlayerColor,
+        activePlayerDirection,
+        cubeValue: 1,
+        cubeOwner: null,
+        matchScore: [0, 0],
+        matchLength: 0,
+        crawford: false,
+        jacoby: false,
+        beavers: false,
+      },
+      5
+    )
     if (!hints || hints.length === 0) {
       return []
     }
