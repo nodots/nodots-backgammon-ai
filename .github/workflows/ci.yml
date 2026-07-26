@@ -5,6 +5,7 @@ on:
     branches: [main, development]
   pull_request:
     branches: [main, development]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -12,8 +13,12 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        node-version: [18, 20, 22]
+        # One OS, two supported node lines. The old 6-way matrix built the
+        # native gnubg-hints addon six times per push (macos included) and is
+        # the likely reason this workflow was manually disabled in April —
+        # which then let every merge from April to July ship unchecked.
+        os: [ubuntu-latest]
+        node-version: [20, 22]
 
     steps:
       - name: Checkout code
