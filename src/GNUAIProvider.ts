@@ -6,6 +6,7 @@
  */
 
 import type {
+  BackgammonGame,
   BackgammonGameMoving,
   BackgammonGameRolling,
   BackgammonPlayMoving,
@@ -13,6 +14,10 @@ import type {
 } from '@nodots/backgammon-types'
 import type { RobotAIProvider } from '@nodots/backgammon-core'
 import { executeRobotTurnWithGNU } from './robotExecution.js'
+import {
+  decideResignationResponseWithGNU,
+  type ResignationResponse,
+} from './resignation.js'
 
 export class GNUAIProvider implements RobotAIProvider {
   async executeRobotTurn(
@@ -32,5 +37,11 @@ export class GNUAIProvider implements RobotAIProvider {
   ): Promise<BackgammonMoveReady | undefined> {
     const { selectBestMove } = await import('./moveSelection.js')
     return selectBestMove(play)
+  }
+
+  async decideResignationResponse(
+    game: BackgammonGame
+  ): Promise<ResignationResponse> {
+    return decideResignationResponseWithGNU(game)
   }
 }

@@ -21,6 +21,7 @@
 import type {
   BackgammonColor,
   BackgammonDieValue,
+  BackgammonGame,
   BackgammonGameMoving,
   BackgammonGameRolling,
   BackgammonMoveDirection,
@@ -36,6 +37,10 @@ import {
   type HttpEngineProviderConfig,
   type LegalMoveResolver,
 } from './HttpEngineProvider.js'
+import {
+  decideResignationResponseWithProvider,
+  type ResignationResponse,
+} from '../resignation.js'
 
 // Lazy CORE imports mirror robotExecution's pattern: break the ai<->core cycle
 // and keep the module importable without eagerly loading CORE.
@@ -376,6 +381,32 @@ export class NeuralAIProvider implements RobotAIProvider {
       workingGame = CoreUtil.Game.checkAndCompleteTurn(workingGame)
     }
     return workingGame as BackgammonGameRolling
+  }
+
+  /**
+   * Respond to a pending resignation offer via the neural /v1 double surface.
+   * The request rides the same HttpEngineProvider config as moves; no
+   * legalMoveResolver is needed because the double path never validates plays.
+   */
+  async decideResignationResponse(
+    game: BackgammonGame
+  ): Promise<ResignationResponse> {
+    const exportPid = await getExportToGnuPositionId()
+    // exportToGnuPositionId accepts any game with a board and active player;
+    // its published signature is narrowed to the moving state.
+    const positionId = exportPid(game as BackgammonGameMoving)
+    const config: HttpEngineProviderConfig = {
+      baseUrl: this.baseUrl,
+      apiKeyRef: this.apiKeyRef,
+      engineId: ENGINE_ID,
+      ...(this.hmacSecretRef ? { hmacSecretRef: this.hmacSecretRef } : {}),
+      ...(typeof this.timeoutMs === 'number' ? { timeoutMs: this.timeoutMs } : {}),
+    }
+    return decideResignationResponseWithProvider(
+      game,
+      new HttpEngineProvider(config),
+      positionId,
+    )
   }
 
   /**

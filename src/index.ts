@@ -122,6 +122,16 @@ export { NodotsAIProvider } from './NodotsAIProvider.js';
 export { NeuralAIProvider } from './providers/NeuralAIProvider.js';
 export { executeRobotTurnWithGNU } from './robotExecution.js';
 
+// Robot response to a pending resignation offer (game.resignationOffer).
+export {
+  decideResignationResponseWithGNU,
+  decideResignationResponseWithProvider,
+  expectedPointsFromEvaluation,
+  mirrorEvaluation,
+  respondToResignation,
+  type ResignationResponse,
+} from './resignation.js';
+
 // Engine boundary: AnalysisProvider contract + in-process GNU implementation.
 // The GNU robot move path routes hint retrieval through inProcessGnuProvider.
 export {
