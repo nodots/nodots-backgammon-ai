@@ -56,9 +56,9 @@
   },
   "dependencies": {
     "@nodots/backgammon-api-utils": "^1.0.0",
-    "@nodots/backgammon-engine-protocol": "^0.2.3",
     "@nodots/backgammon-core": "^1.0.0",
-    "@nodots/backgammon-types": "^1.0.0",
+    "@nodots/backgammon-engine-protocol": "^0.2.3",
+    "@nodots/backgammon-types": "^1.0.5",
     "@nodots/gnubg-hints": "^1.0.0",
     "@types/socket.io-client": "^1.4.36",
     "socket.io-client": "^4.8.1"
