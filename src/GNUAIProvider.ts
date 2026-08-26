@@ -13,6 +13,7 @@ import type {
   BackgammonMoveReady,
 } from '@nodots/backgammon-types'
 import type { RobotAIProvider } from '@nodots/backgammon-core'
+import type { SkillConfig } from '@nodots/backgammon-api-utils'
 import { executeRobotTurnWithGNU } from './robotExecution.js'
 import {
   decideResignationResponseWithGNU,
@@ -28,7 +29,14 @@ export class GNUAIProvider implements RobotAIProvider {
         `GNUAIProvider requires active player to be a robot, but got isRobot=${game.activePlayer.isRobot}`
       )
     }
-    return executeRobotTurnWithGNU(game)
+    // cast: robotProfile is an out-of-band routing field attached to the
+    // active player by the API layer (attachRobotProfile); it is not part of
+    // the BackgammonPlayer type. Same access pattern as core's
+    // Game/executeRobotTurn.ts.
+    const skillConfig =
+      ((game.activePlayer as Record<string, any>).robotProfile
+        ?.skillConfig as SkillConfig | null | undefined) ?? null
+    return executeRobotTurnWithGNU(game, skillConfig)
   }
 
   async selectBestMove(

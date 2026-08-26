@@ -27,6 +27,7 @@ const getMoveHintsMock = jest.fn().mockResolvedValue([
 ])
 
 jest.unstable_mockModule('@nodots/gnubg-hints', () => ({
+  MoveFilterSetting: { Tiny: 0, Narrow: 1, Normal: 2, Large: 3, Huge: 4 },
   GnuBgHints: {
     initialize: initializeMock,
     getMoveHints: getMoveHintsMock,
