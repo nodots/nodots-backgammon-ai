@@ -18,8 +18,19 @@ import {
 } from '@nodots/backgammon-types'
 import type { OverrideInfo, OverrideReason, AITelemetryStep } from '@nodots/backgammon-types'
 import type { SkillConfig } from '@nodots/backgammon-api-utils'
-import { GnuBgHints, MoveStep } from '@nodots/gnubg-hints'
+import { GnuBgHints, MoveStep, MoveFilterSetting } from '@nodots/gnubg-hints'
 import type { HintConfig } from '@nodots/gnubg-hints'
+
+// Default shared configuration used by robots and PR analysis. Re-exported
+// from index.ts. noise is explicit because GnuBgHints.configure merges
+// partial configs into a process-global engine state: any field left out
+// survives from the previous caller (e.g. another robot's skill settings).
+export const DEFAULT_HINTS_CONFIG: Partial<HintConfig> = {
+  evalPlies: 2,
+  moveFilter: MoveFilterSetting.Large,
+  usePruning: true,
+  noise: 0,
+}
 import { logger as coreLogger } from '@nodots/backgammon-core'
 import type { HintRequest } from './engine/contract.js'
 import { inProcessGnuProvider } from './providers/InProcessGnuProvider.js'
@@ -279,6 +290,10 @@ export const executeRobotTurnWithGNU = async (
       moveFilter: hintConfig.moveFilter,
       noise: skillConfig.noise,
     })
+  } else {
+    // No skill profile: reset to the shared defaults so this turn does not
+    // inherit whatever config the previous engine caller left behind.
+    await GnuBgHints.configure(DEFAULT_HINTS_CONFIG)
   }
   const CoreUtil = await getCore()
 

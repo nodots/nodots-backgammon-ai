@@ -6,8 +6,8 @@ import type {
   MoveHint,
   TakeHint,
 } from '@nodots/gnubg-hints';
-import { MoveFilterSetting } from '@nodots/gnubg-hints';
 import { gnubgHints, GnubgHintsIntegration } from './gnubg.js';
+import { DEFAULT_HINTS_CONFIG } from './robotExecution.js';
 import { MoveAnalyzer, RandomMoveAnalyzer } from './moveAnalyzers.js';
 
 // Lazy registration to avoid circular dependency during module initialization
@@ -54,11 +54,7 @@ export async function registerAIProvider(): Promise<void> {
 export type { DoubleHint, HintConfig, HintRequest, MoveHint, TakeHint };
 export { gnubgHints, GnubgHintsIntegration };
 // Default shared configuration used by robots and PR analysis
-export const DEFAULT_HINTS_CONFIG: Partial<HintConfig> = {
-  evalPlies: 2,
-  moveFilter: MoveFilterSetting.Large,
-  usePruning: true,
-};
+export { DEFAULT_HINTS_CONFIG };
 
 export async function initializeGnubgHints(options?: {
   weightsPath?: string;
