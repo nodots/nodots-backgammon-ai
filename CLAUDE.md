@@ -111,6 +111,15 @@ export class MyAnalyzer implements MoveAnalyzer {
 - Coverage reports generated in `coverage/` directory
 - Integration tests for WebSocket and GNU Backgammon components
 
+### Rules that came from this package's incidents
+
+- **Write the failing test first.** It must fail against the pre-change tree and pass after. A test written against already-fixed code proves the code runs, not that the bug is gone.
+- **Regression fixtures are built from the real production input** — the actual position ID that stuck, not a hand-written approximation. Both production stuck-robot positions are ungated fixtures exercising the real addon board path at ply-0 on every CI pass.
+- **Never gate a test behind an environment flag nothing sets.** `regression-bar-reentry.test.ts` sat behind `RUN_GNUBG_HINTS=1` for a year — correct test, correct root-cause documentation, never executed anywhere — while the bug it covered recurred in production.
+- **Confirm CI is enabled before trusting a green branch.** This repo's CI was manually disabled from 2026-04-22 to 2026-07-26; every merge in that window shipped unchecked.
+- **No silent fallbacks in move execution.** If a GNU-recommended move cannot be matched to CORE's legal moves, throw with full diagnostics (position ID, planned move, legal moves). A fallback turns a detectable failure into a plausible-looking wrong answer — it let the robot play near-random moves for months while every health check stayed green.
+- **TypeScript errors in tests are test failures.** Fix them; never exclude them.
+
 ## WebSocket Architecture
 
 The AI package includes a WebSocket client for real-time game analysis:
